@@ -112,7 +112,15 @@ function VerPalpite() {
         </Link>
       </header>
 
-      <CopyMessage userId={userId} />
+      <div className="flex flex-col gap-2">
+        <Link
+          href="/"
+          className="flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-3 text-base font-semibold text-black"
+        >
+          ⚽ Faz o seu palpite
+        </Link>
+        <CopyMessage userId={userId} />
+      </div>
 
       <div className="mt-6 flex flex-col gap-5">
         {GROUPS.map((g) => {
