@@ -4,11 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getState } from "@/lib/api";
 import { computeRanking, type RankEntry, type PalpiteRow } from "@/lib/ranking";
+import { BOLOES, BOLAO_BY_USER, type Bolao } from "@/data/grupos";
+import type { Gabarito } from "@/lib/scoring";
 
 export default function RankingPage() {
   const [phase, setPhase] = useState<"loading" | "ready" | "error">("loading");
-  const [ranking, setRanking] = useState<RankEntry[] | null>(null);
-  const [enviados, setEnviados] = useState<PalpiteRow[]>([]);
+  const [palpites, setPalpites] = useState<PalpiteRow[]>([]);
+  const [gabarito, setGabarito] = useState<Gabarito>({});
+  const [bolao, setBolao] = useState<Bolao>(BOLOES[0]);
   const [errMsg, setErrMsg] = useState("");
 
   useEffect(() => {
@@ -16,10 +19,8 @@ export default function RankingPage() {
     getState()
       .then((s) => {
         if (!alive) return;
-        setRanking(computeRanking(s.palpites, s.gabarito));
-        setEnviados(
-          s.palpites.filter((p) => p.enviadoEm).sort((a, b) => a.nome.localeCompare(b.nome)),
-        );
+        setPalpites(s.palpites);
+        setGabarito(s.gabarito);
         setPhase("ready");
       })
       .catch((e) => {
@@ -32,14 +33,38 @@ export default function RankingPage() {
     };
   }, []);
 
+  // Cada aba mostra só os participantes do bolão selecionado.
+  const doBolao = palpites.filter((p) => (BOLAO_BY_USER[p.userId] ?? []).includes(bolao));
+  const ranking = computeRanking(doBolao, gabarito);
+  const enviados = doBolao
+    .filter((p) => p.enviadoEm)
+    .sort((a, b) => a.nome.localeCompare(b.nome));
+
   return (
     <main className="flex-1 flex flex-col px-5 py-8">
-      <header className="mb-6 flex items-center justify-between">
+      <header className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Ranking</h1>
         <Link href="/" className="text-sm text-neutral-400 underline">
           Início
         </Link>
       </header>
+
+      <div className="mb-6 flex gap-2">
+        {BOLOES.map((b) => (
+          <button
+            key={b}
+            type="button"
+            onClick={() => setBolao(b)}
+            className={`flex-1 rounded-lg px-3 py-2.5 text-xs font-semibold leading-snug ${
+              b === bolao
+                ? "bg-emerald-500 text-black"
+                : "border border-neutral-800 bg-neutral-900 text-neutral-300"
+            }`}
+          >
+            {b}
+          </button>
+        ))}
+      </div>
 
       {phase === "loading" && <p className="text-sm text-neutral-400">Carregando…</p>}
 
