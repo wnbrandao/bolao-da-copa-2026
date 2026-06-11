@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BASE_PATH } from "@/lib/config";
+import { APOSTAS_ENCERRADAS, BASE_PATH } from "@/lib/config";
 
 // Copia a mensagem pronta (com o link público do palpite) pra colar no WhatsApp.
 // Não abre o app — só copia. `card` envolve num cartão (usado após enviar).
@@ -10,7 +10,9 @@ export default function CopyMessage({ userId, card = false }: { userId: string; 
 
   async function copiar() {
     const url = `${window.location.origin}${BASE_PATH}/ver/?u=${userId}`;
-    const msg = `🏆 Meu palpite no Bolão da Copa 2026! Faz o seu e bora ver quem crava a fase de grupos: ${url}`;
+    const msg = APOSTAS_ENCERRADAS
+      ? `🏆 Meu palpite no Bolão da Copa 2026! Bora ver quem crava a fase de grupos: ${url}`
+      : `🏆 Meu palpite no Bolão da Copa 2026! Faz o seu e bora ver quem crava a fase de grupos: ${url}`;
     try {
       await navigator.clipboard.writeText(msg);
       setCopied(true);

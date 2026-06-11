@@ -7,6 +7,7 @@ import Flag from "@/components/Flag";
 import CopyMessage from "@/components/CopyMessage";
 import { GROUPS, TEAM_BY_CODE } from "@/data/teams";
 import { getState } from "@/lib/api";
+import { APOSTAS_ENCERRADAS } from "@/lib/config";
 import {
   gabaritoToPositions,
   isGabaritoCompleto,
@@ -113,12 +114,14 @@ function VerPalpite() {
       </header>
 
       <div className="flex flex-col gap-2">
-        <Link
-          href="/"
-          className="flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-3 text-base font-semibold text-black"
-        >
-          ⚽ Faz o seu palpite
-        </Link>
+        {!APOSTAS_ENCERRADAS && (
+          <Link
+            href="/"
+            className="flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-3 text-base font-semibold text-black"
+          >
+            ⚽ Faz o seu palpite
+          </Link>
+        )}
         <CopyMessage userId={userId} />
       </div>
 

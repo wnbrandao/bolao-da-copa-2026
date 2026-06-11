@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getStored } from "@/lib/identity";
 import { getState } from "@/lib/api";
+import { APOSTAS_ENCERRADAS } from "@/lib/config";
 import type { Palpite } from "@/lib/scoring";
 import PalpiteBoard from "./PalpiteBoard";
 
@@ -16,6 +17,29 @@ type Loaded = {
 };
 
 export default function PalpitePage() {
+  if (APOSTAS_ENCERRADAS) return <ApostasEncerradas />;
+  return <PalpiteAberto />;
+}
+
+function ApostasEncerradas() {
+  return (
+    <main className="flex-1 flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+      <div className="text-5xl">⛔</div>
+      <h1 className="text-xl font-bold">Apostas encerradas</h1>
+      <p className="text-sm text-neutral-400">
+        A copa começou! Agora é torcer e acompanhar a pontuação.
+      </p>
+      <Link
+        href="/ranking"
+        className="rounded-lg bg-emerald-500 px-4 py-3 text-base font-semibold text-black"
+      >
+        Ver ranking
+      </Link>
+    </main>
+  );
+}
+
+function PalpiteAberto() {
   const router = useRouter();
   const [phase, setPhase] = useState<"loading" | "ready" | "error">("loading");
   const [data, setData] = useState<Loaded | null>(null);

@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getStored, saveIdentity } from "@/lib/identity";
+import { APOSTAS_ENCERRADAS } from "@/lib/config";
 
 export default function HomePage() {
   const router = useRouter();
@@ -37,15 +38,44 @@ export default function HomePage() {
         <div className="text-5xl">🏆</div>
         <h1 className="mt-3 text-3xl font-bold tracking-tight">Bolão da Copa 2026</h1>
         <p className="mt-2 text-sm text-neutral-400">
-          Arraste e ordene a classificação (1º a 4º) dos 12 grupos da fase de grupos.
-          <span className="block mt-1 text-neutral-500">
-            +3 pontos por seleção na posição exata.
-          </span>
+          {APOSTAS_ENCERRADAS ? (
+            <>
+              A copa começou e as apostas estão encerradas.
+              <span className="block mt-1 text-neutral-500">
+                +3 pontos por seleção na posição exata.
+              </span>
+            </>
+          ) : (
+            <>
+              Arraste e ordene a classificação (1º a 4º) dos 12 grupos da fase de grupos.
+              <span className="block mt-1 text-neutral-500">
+                +3 pontos por seleção na posição exata.
+              </span>
+            </>
+          )}
         </p>
       </header>
 
-      {/* enquanto não montou, mostra o form (neutro) pra casar com o HTML estático */}
-      {mounted && savedNome ? (
+      {APOSTAS_ENCERRADAS ? (
+        <div className="flex flex-col gap-4">
+          {mounted && savedNome && (
+            <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+              <p className="text-sm text-neutral-400">Você está como</p>
+              <p className="text-lg font-semibold">{savedNome}</p>
+            </div>
+          )}
+          <div className="rounded-lg border border-amber-800/60 bg-amber-950/30 p-4 text-sm text-amber-300">
+            ⛔ Apostas encerradas — agora é torcer e acompanhar a pontuação.
+          </div>
+          <Link
+            href="/ranking"
+            className="rounded-lg bg-emerald-500 px-4 py-3 text-center text-base font-semibold text-black"
+          >
+            Ver ranking
+          </Link>
+        </div>
+      ) : /* enquanto não montou, mostra o form (neutro) pra casar com o HTML estático */
+      mounted && savedNome ? (
         <div className="flex flex-col gap-4">
           <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
             <p className="text-sm text-neutral-400">Você está como</p>
