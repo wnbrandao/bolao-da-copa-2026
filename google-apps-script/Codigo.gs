@@ -152,8 +152,9 @@ function readState_() {
     const id = String(cv[i][1] || '').trim();
     const valor = String(cv[i][2] || '').trim();
     if (!tipo || !id || !valor) continue;
-    if (tipo === 'seed') seeding[id] = valor.toUpperCase();
-    else if (tipo === 'result') resultados[id] = valor;
+    const ID = id.toUpperCase(); // slots/matchIds são maiúsculos (1A, T1, M32_1)
+    if (tipo === 'seed') seeding[ID] = valor.toUpperCase();
+    else if (tipo === 'result') resultados[ID] = valor.toUpperCase();
   }
 
   return { palpites: palpites, gabarito: gabarito, chaveamento: { seeding: seeding, resultados: resultados } };

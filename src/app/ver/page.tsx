@@ -102,27 +102,28 @@ function VerPalpite() {
 
   const temGabarito = isGabaritoCompleto(gabarito);
   const oficial = gabaritoToPositions(gabarito);
-  const acertos = Object.keys(palpite).filter((c) => oficial[c] === palpite[c]).length;
-  const pontos = acertos * POINTS_EXACT;
+  const pontos = Object.keys(palpite).filter((c) => oficial[c] === palpite[c]).length * POINTS_EXACT;
   const seeding = effectiveSeeding(gabarito, chaveamento);
   const jogouGrupos = !!enviadoEm;
   const jogouMata = !!enviadoMataEm;
   const pontosMata = jogouMata ? scoreMata(mata, chaveamento) : 0;
+  const temResultMata = Object.keys(chaveamento.resultados).length > 0;
+  const mostraGrupos = temGabarito && jogouGrupos;
+  const mostraMata = jogouMata && temResultMata;
+  const totalPts = (mostraGrupos ? pontos : 0) + (mostraMata ? pontosMata : 0);
 
   return (
     <main className="flex-1 flex flex-col px-5 py-8">
       <header className="mb-5 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="truncate text-2xl font-bold tracking-tight">{nome}</h1>
-          {temGabarito && jogouGrupos ? (
+          {mostraGrupos || mostraMata ? (
             <p className="text-sm text-neutral-400">
-              <span className="font-semibold text-emerald-400">{pontos} pts</span>
-              <span className="text-neutral-500"> · {acertos}/48 posições exatas</span>
-            </p>
-          ) : jogouMata ? (
-            <p className="text-sm text-neutral-400">
-              <span className="font-semibold text-emerald-400">{pontosMata} pts</span>
-              <span className="text-neutral-500"> · mata-mata</span>
+              <span className="font-semibold text-emerald-400">{totalPts} pts</span>
+              <span className="text-neutral-500">
+                {mostraGrupos ? ` · grupos ${pontos}` : ""}
+                {mostraMata ? ` · mata ${pontosMata}` : ""}
+              </span>
             </p>
           ) : (
             <p className="text-sm text-neutral-500">Aguardando resultados oficiais</p>

@@ -61,14 +61,6 @@ export function competitors(
   return [resolveSide(m.a, palpite), resolveSide(m.b, palpite)];
 }
 
-// O perdedor de um confronto (usado pela disputa de 3º).
-export function loserOf(matchId: string, palpite: MataPalpite): SourceId | null {
-  const [x, y] = competitors(matchId, palpite);
-  const w = palpite[matchId];
-  if (!w || !x || !y) return null;
-  return w === x ? y : x;
-}
-
 // Remove picks a jusante que ficaram inválidos (slot não é mais competidor).
 // Processa raso→fundo, então cada confronto é avaliado já com os ascendentes ok.
 export function sanitize(palpite: MataPalpite): MataPalpite {
