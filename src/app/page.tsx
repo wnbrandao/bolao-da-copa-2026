@@ -68,8 +68,14 @@ export default function HomePage() {
             ⛔ Apostas encerradas — agora é torcer e acompanhar a pontuação.
           </div>
           <Link
-            href="/ranking"
+            href="/mata-mata"
             className="rounded-lg bg-emerald-500 px-4 py-3 text-center text-base font-semibold text-black"
+          >
+            🏟️ Mata-mata
+          </Link>
+          <Link
+            href="/ranking"
+            className="rounded-lg border border-neutral-800 px-4 py-3 text-center text-base font-medium text-neutral-200"
           >
             Ver ranking
           </Link>

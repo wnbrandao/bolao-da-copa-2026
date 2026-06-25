@@ -15,6 +15,8 @@ import {
   type Gabarito,
   type Palpite,
 } from "@/lib/scoring";
+import { MATCHES_BY_FASE, FASES, FASE_NOME, SOURCE_LABEL } from "@/data/bracket";
+import type { Chaveamento, MataPalpite } from "@/lib/mata";
 
 export default function VerPage() {
   return (
@@ -36,6 +38,8 @@ function VerPalpite() {
   const [nome, setNome] = useState("");
   const [palpite, setPalpite] = useState<Palpite>({});
   const [gabarito, setGabarito] = useState<Gabarito>({});
+  const [mata, setMata] = useState<MataPalpite>({});
+  const [chaveamento, setChaveamento] = useState<Chaveamento>({ seeding: {}, resultados: {} });
 
   useEffect(() => {
     if (!userId) {
@@ -46,7 +50,7 @@ function VerPalpite() {
     getState()
       .then((s) => {
         if (!alive) return;
-        const u = s.palpites.find((p) => p.userId === userId && p.enviadoEm);
+        const u = s.palpites.find((p) => p.userId === userId && (p.enviadoEm || p.enviadoMataEm));
         if (!u) {
           setPhase("notfound");
           return;
@@ -54,6 +58,8 @@ function VerPalpite() {
         setNome(u.nome);
         setPalpite(u.palpite ?? {});
         setGabarito(s.gabarito ?? {});
+        setMata(u.mata ?? {});
+        setChaveamento(s.chaveamento);
         setPhase("ready");
       })
       .catch(() => alive && setPhase("error"));
@@ -165,6 +171,48 @@ function VerPalpite() {
           );
         })}
       </div>
+
+      {Object.keys(mata).length > 0 && (
+        <section className="mt-8">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-neutral-400">
+            Mata-mata
+          </h2>
+          <div className="flex flex-col gap-4">
+            {FASES.map((fase) => (
+              <div key={fase}>
+                <h3 className="mb-2 text-xs font-semibold text-neutral-400">{FASE_NOME[fase]}</h3>
+                <ul className="flex flex-col gap-1.5">
+                  {MATCHES_BY_FASE[fase].map((id) => {
+                    const venc = mata[id];
+                    if (!venc) return null;
+                    const sigla = chaveamento.seeding[venc];
+                    const team = sigla ? TEAM_BY_CODE[sigla] : undefined;
+                    const acertou = chaveamento.resultados[id] === venc;
+                    return (
+                      <li
+                        key={id}
+                        className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-sm ${
+                          acertou ? "border-emerald-700 bg-emerald-950/40" : "border-neutral-800 bg-neutral-900"
+                        }`}
+                      >
+                        {team ? (
+                          <Flag code={team.flag} />
+                        ) : (
+                          <span aria-hidden className="h-5 w-7 shrink-0 rounded-[2px] bg-neutral-800 ring-1 ring-black/30" />
+                        )}
+                        <span className="min-w-0 flex-1 truncate font-medium">
+                          {team ? team.nome : (SOURCE_LABEL[venc] ?? venc)}
+                        </span>
+                        {acertou && <span className="text-xs text-emerald-400">✓</span>}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

@@ -3,14 +3,18 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getState } from "@/lib/api";
-import { computeRanking, type RankEntry, type PalpiteRow } from "@/lib/ranking";
+import { computeCombined, type CombinedEntry, type PalpiteRow } from "@/lib/ranking";
+import { isGabaritoCompleto, type Gabarito } from "@/lib/scoring";
+import type { Chaveamento } from "@/lib/mata";
 import { BOLOES, BOLAO_BY_USER, type Bolao } from "@/data/grupos";
-import type { Gabarito } from "@/lib/scoring";
+
+const CHAVE_VAZIO: Chaveamento = { seeding: {}, resultados: {} };
 
 export default function RankingPage() {
   const [phase, setPhase] = useState<"loading" | "ready" | "error">("loading");
   const [palpites, setPalpites] = useState<PalpiteRow[]>([]);
   const [gabarito, setGabarito] = useState<Gabarito>({});
+  const [chaveamento, setChaveamento] = useState<Chaveamento>(CHAVE_VAZIO);
   const [bolao, setBolao] = useState<Bolao>(BOLOES[0]);
   const [errMsg, setErrMsg] = useState("");
 
@@ -21,6 +25,7 @@ export default function RankingPage() {
         if (!alive) return;
         setPalpites(s.palpites);
         setGabarito(s.gabarito);
+        setChaveamento(s.chaveamento);
         setPhase("ready");
       })
       .catch((e) => {
@@ -35,10 +40,9 @@ export default function RankingPage() {
 
   // Cada aba mostra só os participantes do bolão selecionado.
   const doBolao = palpites.filter((p) => (BOLAO_BY_USER[p.userId] ?? []).includes(bolao));
-  const ranking = computeRanking(doBolao, gabarito);
-  const enviados = doBolao
-    .filter((p) => p.enviadoEm)
-    .sort((a, b) => a.nome.localeCompare(b.nome));
+  const ranking = computeCombined(doBolao, gabarito, chaveamento);
+  const gabaritoPronto = isGabaritoCompleto(gabarito);
+  const temMata = Object.keys(chaveamento.resultados).length > 0;
 
   return (
     <main className="flex-1 flex flex-col px-5 py-8">
@@ -74,47 +78,28 @@ export default function RankingPage() {
         </div>
       )}
 
-      {phase === "ready" && (ranking === null ? <Aguardando enviados={enviados} /> : <Tabela ranking={ranking} />)}
+      {phase === "ready" && (
+        <>
+          {!gabaritoPronto && !temMata && (
+            <div className="mb-4 rounded-lg border border-amber-800/60 bg-amber-950/30 p-3 text-xs text-amber-300">
+              O ranking pontua quando o gabarito dos grupos fechar e/ou o mata-mata começar.
+            </div>
+          )}
+          <div className="mb-2 flex items-center justify-end gap-1 text-[10px] uppercase tracking-wider text-neutral-600">
+            <span className="w-10 text-right">grupos</span>
+            <span className="w-8 text-right">mata</span>
+            <span className="w-10 text-right">total</span>
+          </div>
+          <Tabela ranking={ranking} gabaritoPronto={gabaritoPronto} />
+        </>
+      )}
     </main>
   );
 }
 
-function Aguardando({ enviados }: { enviados: PalpiteRow[] }) {
-  return (
-    <div className="flex flex-col gap-5">
-      <div className="rounded-lg border border-amber-800/60 bg-amber-950/30 p-4 text-sm text-amber-300">
-        O ranking aparece quando todos os 12 grupos forem encerrados e o gabarito oficial
-        estiver completo.
-      </div>
-      <section>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-neutral-400">
-          Palpites enviados ({enviados.length})
-        </h2>
-        {enviados.length === 0 ? (
-          <p className="text-sm text-neutral-500">Ninguém enviou palpite ainda.</p>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {enviados.map((p) => (
-              <li key={p.userId}>
-                <Link
-                  href={`/ver/?u=${p.userId}`}
-                  className="flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm"
-                >
-                  <span className="font-medium">{p.nome}</span>
-                  <span className="text-neutral-500">ver palpite →</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </div>
-  );
-}
-
-function Tabela({ ranking }: { ranking: RankEntry[] }) {
+function Tabela({ ranking, gabaritoPronto }: { ranking: CombinedEntry[]; gabaritoPronto: boolean }) {
   if (ranking.length === 0) {
-    return <p className="text-sm text-neutral-500">Nenhum palpite enviado.</p>;
+    return <p className="text-sm text-neutral-500">Ninguém enviou palpite ainda.</p>;
   }
   return (
     <ol className="flex flex-col gap-2">
@@ -132,8 +117,12 @@ function Tabela({ ranking }: { ranking: RankEntry[] }) {
               {i + 1}
             </span>
             <span className="min-w-0 flex-1 truncate text-sm font-medium">{r.nome}</span>
-            <span className="text-sm font-semibold text-emerald-400 tabular-nums">
-              {r.pontos} pts
+            <span className="w-10 text-right text-xs tabular-nums text-neutral-400">
+              {gabaritoPronto ? r.grupos : "—"}
+            </span>
+            <span className="w-8 text-right text-xs tabular-nums text-neutral-400">{r.mata}</span>
+            <span className="w-10 text-right text-sm font-semibold tabular-nums text-emerald-400">
+              {r.total}
             </span>
           </Link>
         </li>
