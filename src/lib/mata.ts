@@ -73,7 +73,10 @@ export function loserOf(matchId: string, palpite: MataPalpite): SourceId | null 
 // Processa raso→fundo, então cada confronto é avaliado já com os ascendentes ok.
 export function sanitize(palpite: MataPalpite): MataPalpite {
   const out: MataPalpite = { ...palpite };
-  for (const fase of ["M16", "M8", "M4", "M2", "M3P"] as const) {
+  // Inclui M32: poda picks de 16-avos que não sejam mais um dos dois slots-fonte
+  // do confronto (ex.: rascunho salvo sob um pareamento antigo) — raso→fundo, então
+  // a cascata limpa os dependentes a jusante em seguida.
+  for (const fase of ["M32", "M16", "M8", "M4", "M2", "M3P"] as const) {
     for (const id of MATCHES_BY_FASE[fase]) {
       if (!out[id]) continue;
       const [x, y] = competitors(id, out);

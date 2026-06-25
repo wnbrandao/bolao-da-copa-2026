@@ -48,8 +48,9 @@ function doGet() {
 // POST: action "save" (grupos) | "saveMata" (mata-mata).
 function doPost(e) {
   const lock = LockService.getScriptLock();
-  lock.waitLock(20000);
   try {
+    // tryLock (em vez de waitLock) DENTRO do try: timeout de lock também volta JSON.
+    if (!lock.tryLock(20000)) return json_({ error: 'ocupado, tente de novo' });
     const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     if (body.action === 'save') return saveGrupos_(body);
     if (body.action === 'saveMata') return saveMata_(body);
@@ -57,7 +58,7 @@ function doPost(e) {
   } catch (err) {
     return json_({ error: String(err) });
   } finally {
-    lock.releaseLock();
+    if (lock.hasLock()) lock.releaseLock();
   }
 }
 
@@ -86,10 +87,10 @@ function saveGrupos_(body) {
   const row = findRow_(values, userId);
   const prev = row > 0 ? values[row - 1] : [];
   const enviadoEm = body.submit ? new Date().toISOString() : String(prev[2] || '');
-  // preserva mata/enviadoMataEm
+  // preserva mata/enviadoMataEm crus (não reparseia — evita apagar célula editada à mão)
   const rowData = [
     userId, nome, enviadoEm, JSON.stringify(body.palpite || {}),
-    JSON.stringify(safeParseStr_(prev[4])), String(prev[5] || ''),
+    String(prev[4] || '{}'), String(prev[5] || ''),
   ];
   writeRow_(sh, row, rowData);
   return json_({ ok: true });
@@ -104,9 +105,9 @@ function saveMata_(body) {
   const row = findRow_(values, userId);
   const prev = row > 0 ? values[row - 1] : [];
   const enviadoMataEm = body.submit ? new Date().toISOString() : String(prev[5] || '');
-  // preserva enviadoEm/palpite (grupos)
+  // preserva enviadoEm/palpite (grupos) crus
   const rowData = [
-    userId, nome, String(prev[2] || ''), JSON.stringify(safeParseStr_(prev[3])),
+    userId, nome, String(prev[2] || ''), String(prev[3] || '{}'),
     JSON.stringify(body.mata || {}), enviadoMataEm,
   ];
   writeRow_(sh, row, rowData);

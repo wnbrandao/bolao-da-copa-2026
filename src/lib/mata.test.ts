@@ -38,12 +38,14 @@ describe("competitors", () => {
     expect(typeof b).toBe("string");
   });
 
-  it("oitavas dependem do palpite dos 16-avos (null sem palpite)", () => {
+  it("oitavas dependem do vencedor do confronto-filho (null sem palpite)", () => {
     const [a, b] = competitors("M16_1", {});
     expect(a).toBeNull();
     expect(b).toBeNull();
-    const [c] = competitors("M16_1", { M32_1: "1A" });
-    expect(c).toBe("1A");
+    const childA = BRACKET["M16_1"].a;
+    const m = childA.kind === "winner" ? childA.match : "M32_1";
+    const [c] = competitors("M16_1", { [m]: "1E" });
+    expect(c).toBe("1E");
   });
 });
 
@@ -101,13 +103,42 @@ describe("scoreMata", () => {
 });
 
 describe("sanitize", () => {
-  it("limpa picks a jusante inválidos ao trocar um vencedor", () => {
-    const [a, b] = competitors("M32_1", {});
-    const p: MataPalpite = { M32_1: a as string, M16_1: a as string };
-    const outro = b as string;
-    const limpo = sanitize({ ...p, M32_1: outro });
-    expect(limpo.M32_1).toBe(outro);
+  it("limpa pick a jusante quando o vencedor do confronto-filho muda", () => {
+    // M16_1 depende de dois confrontos de 16-avos (cruzamento oficial).
+    const childA = BRACKET["M16_1"].a;
+    const m32 = childA.kind === "winner" ? childA.match : "M32_1";
+    const [a, b] = competitors(m32, {});
+    const p: MataPalpite = { [m32]: a as string, M16_1: a as string };
+    const limpo = sanitize({ ...p, [m32]: b as string });
+    expect(limpo[m32]).toBe(b);
     expect(limpo.M16_1).toBeUndefined();
+  });
+
+  it("remove pick de 16-avos que não é mais um slot-fonte do confronto (e cascata)", () => {
+    const limpo = sanitize({ M32_1: "ZZ", M16_2: "ZZ" }); // M16_2 depende de M32_1
+    expect(limpo.M32_1).toBeUndefined();
+    expect(limpo.M16_2).toBeUndefined();
+  });
+});
+
+describe("estrutura do bracket (oficial)", () => {
+  it("os 16-avos cobrem os 32 slots-fonte exatamente uma vez", () => {
+    const used: string[] = [];
+    for (const id of MATCHES_BY_FASE.M32) {
+      for (const side of [BRACKET[id].a, BRACKET[id].b]) {
+        if (side.kind === "source") used.push(side.source);
+      }
+    }
+    expect(used.length).toBe(32);
+    expect(new Set(used)).toEqual(new Set(SOURCES));
+  });
+
+  it("todo lado winner/loser referencia um confronto existente", () => {
+    for (const id of Object.keys(BRACKET)) {
+      for (const side of [BRACKET[id].a, BRACKET[id].b]) {
+        if (side.kind !== "source") expect(BRACKET[side.match]).toBeDefined();
+      }
+    }
   });
 });
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import Flag from "@/components/Flag";
 import { TEAM_BY_CODE } from "@/data/teams";
 import {
+  BRACKET,
   MATCHES_BY_FASE,
   FASES,
   FASE_NOME,
@@ -15,7 +16,6 @@ import {
 import {
   competitors,
   sanitize,
-  isMataCompleto,
   type MataFaseResolved,
   type MataPalpite,
 } from "@/lib/mata";
@@ -41,7 +41,12 @@ export default function BracketBoard({ fase, userId, nome, initialMata, submitte
   const [status, setStatus] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
 
   const faseAtual = PASSOS[step] as Fase;
-  const completo = useMemo(() => isMataCompleto(palpite), [palpite]);
+  const pendentes = useMemo(() => Object.keys(BRACKET).filter((id) => !palpite[id]), [palpite]);
+  const completo = pendentes.length === 0;
+  const faseDone = useMemo(
+    () => PASSOS.map((f) => MATCHES_BY_FASE[f].every((id) => Boolean(palpite[id]))),
+    [palpite],
+  );
 
   function pick(matchId: string, source: SourceId) {
     if (readOnly) return;
@@ -52,7 +57,9 @@ export default function BracketBoard({ fase, userId, nome, initialMata, submitte
   async function salvar(submit: boolean) {
     if (saving || readOnly) return;
     if (submit && !completo) {
-      setStatus({ kind: "err", msg: "Preencha o bracket inteiro antes de enviar." });
+      const first = pendentes[0];
+      if (first) setStep(PASSOS.indexOf(BRACKET[first].fase));
+      setStatus({ kind: "err", msg: `Faltam ${pendentes.length} confronto(s) — te levei pro próximo.` });
       return;
     }
     setSaving(true);
@@ -96,7 +103,7 @@ export default function BracketBoard({ fase, userId, nome, initialMata, submitte
         </div>
       )}
 
-      <Stepper step={step} />
+      <Stepper step={step} done={faseDone} />
 
       <h2 className="mb-3 mt-4 text-sm font-semibold text-neutral-200">{FASE_NOME[faseAtual]}</h2>
 
@@ -143,6 +150,11 @@ export default function BracketBoard({ fase, userId, nome, initialMata, submitte
                 {status.msg}
               </p>
             )}
+            {!completo && (
+              <p className="mb-2 text-center text-xs text-neutral-500">
+                Faltam {pendentes.length} confronto(s) pra enviar
+              </p>
+            )}
             <div className="flex gap-3">
               <button
                 type="button"
@@ -155,7 +167,7 @@ export default function BracketBoard({ fase, userId, nome, initialMata, submitte
               <button
                 type="button"
                 onClick={() => salvar(true)}
-                disabled={saving || !completo}
+                disabled={saving}
                 className="flex-1 rounded-lg bg-emerald-500 px-4 py-3 text-sm font-semibold text-black disabled:opacity-50"
               >
                 {isSubmitted ? "Atualizar envio" : "Enviar mata-mata"}
@@ -168,13 +180,15 @@ export default function BracketBoard({ fase, userId, nome, initialMata, submitte
   );
 }
 
-function Stepper({ step }: { step: number }) {
+function Stepper({ step, done }: { step: number; done: boolean[] }) {
   return (
     <div className="flex items-center gap-1.5">
       {PASSOS.map((p, i) => (
         <span
           key={p}
-          className={`h-2 flex-1 rounded-full ${i <= step ? "bg-emerald-500" : "bg-neutral-800"}`}
+          className={`h-2 flex-1 rounded-full ${
+            done[i] ? "bg-emerald-500" : i === step ? "bg-emerald-500/40" : "bg-neutral-800"
+          }`}
         />
       ))}
     </div>

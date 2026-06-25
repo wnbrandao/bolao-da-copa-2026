@@ -4,6 +4,12 @@
 // 32 slots-fonte: 1A..1L (1º de grupo, 12) + 2A..2L (2º, 12) + T1..T8 (8 melhores
 // 3os). Os T1..T8 só se resolvem (qual grupo) no fim da fase de grupos, via seeding
 // oficial — NÃO hardcodar grupo aqui.
+//
+// FONTE: chaveamento oficial FIFA 2026 (Anexo C / Wikipedia "2026 FIFA World Cup
+// knockout stage"), jogos 73–96. Os 16-avos (R32) e as oitavas (R16, cruzamento
+// oficial — NÃO são pares consecutivos) estão fiéis ao oficial. Quartas/semis/final
+// usam a árvore consecutiva sobre as oitavas (a meia-chave exata pode ser conferida
+// no bracket oficial; NÃO afeta a pontuação, que é por slot/independente do caminho).
 
 export type SourceId = string; // "1A" | "2B" | "T1" ...
 export type Fase = "M32" | "M16" | "M8" | "M4" | "M2" | "M3P";
@@ -36,6 +42,19 @@ export const SOURCES: SourceId[] = [
   ...Array.from({ length: 8 }, (_, i) => `T${i + 1}`),
 ];
 
+// Rótulo de cada slot dos 8 melhores 3os = grupos de onde aquele 3º pode vir
+// (conjunto fixo da tabela oficial). T1..T8 estão nos jogos 74,77,79,80,81,82,85,87.
+const THIRD_LABEL: Record<string, string> = {
+  T1: "3º [A/B/C/D/F]", // jogo 74, contra 1E
+  T2: "3º [C/D/F/G/H]", // jogo 77, contra 1I
+  T3: "3º [C/E/F/H/I]", // jogo 79, contra 1A
+  T4: "3º [E/H/I/J/K]", // jogo 80, contra 1L
+  T5: "3º [B/E/F/I/J]", // jogo 81, contra 1D
+  T6: "3º [A/E/H/I/J]", // jogo 82, contra 1G
+  T7: "3º [E/F/G/I/J]", // jogo 85, contra 1B
+  T8: "3º [D/E/I/J/L]", // jogo 87, contra 1K
+};
+
 // Rótulo legível (placeholder enquanto não há seeding).
 export const SOURCE_LABEL: Record<SourceId, string> = (() => {
   const m: Record<string, string> = {};
@@ -43,20 +62,40 @@ export const SOURCE_LABEL: Record<SourceId, string> = (() => {
     m[`1${g}`] = `1º ${g}`;
     m[`2${g}`] = `2º ${g}`;
   });
-  for (let i = 1; i <= 8; i++) m[`T${i}`] = `3º (${i})`;
+  for (let i = 1; i <= 8; i++) m[`T${i}`] = THIRD_LABEL[`T${i}`];
   return m;
 })();
 
-// === Pares dos 16-avos ===
-// PROVISÓRIO E ESTRUTURALMENTE COMPLETO: cobre os 32 slots exatamente uma vez.
-// Os PARES EXATOS (qual 1º enfrenta qual 2º/3º) e a alocação dos T1..T8 devem ser
-// CONFERIDOS contra o bracket oficial da FIFA 2026 antes de abrir as apostas. A
-// pontuação e a UI NÃO dependem do pareamento — só a fidelidade do preview.
+// === 16-avos (jogos 73–88) — pares OFICIAIS ===
 const R32_PAIRINGS: [SourceId, SourceId][] = [
-  ["1A", "2B"], ["1C", "2D"], ["1E", "2F"], ["1G", "2H"],
-  ["1I", "2J"], ["1K", "2L"], ["1B", "T1"], ["1D", "T2"],
-  ["1F", "T3"], ["1H", "T4"], ["1J", "T5"], ["1L", "T6"],
-  ["2A", "T7"], ["2C", "T8"], ["2E", "2G"], ["2I", "2K"],
+  ["2A", "2B"], // M32_1  (73)
+  ["1E", "T1"], // M32_2  (74) 1E vs 3º[A/B/C/D/F]
+  ["1F", "2C"], // M32_3  (75)
+  ["1C", "2F"], // M32_4  (76)
+  ["1I", "T2"], // M32_5  (77) 1I vs 3º[C/D/F/G/H]
+  ["2E", "2I"], // M32_6  (78)
+  ["1A", "T3"], // M32_7  (79) 1A vs 3º[C/E/F/H/I]
+  ["1L", "T4"], // M32_8  (80) 1L vs 3º[E/H/I/J/K]
+  ["1D", "T5"], // M32_9  (81) 1D vs 3º[B/E/F/I/J]
+  ["1G", "T6"], // M32_10 (82) 1G vs 3º[A/E/H/I/J]
+  ["2K", "2L"], // M32_11 (83)
+  ["1H", "2J"], // M32_12 (84)
+  ["1B", "T7"], // M32_13 (85) 1B vs 3º[E/F/G/I/J]
+  ["1J", "2H"], // M32_14 (86)
+  ["1K", "T8"], // M32_15 (87) 1K vs 3º[D/E/I/J/L]
+  ["2D", "2G"], // M32_16 (88)
+];
+
+// === Oitavas (jogos 89–96) — cruzamento OFICIAL (não são pares consecutivos) ===
+const R16_FEEDERS: [string, string][] = [
+  ["M32_2", "M32_5"], // M16_1 (89)
+  ["M32_1", "M32_3"], // M16_2 (90)
+  ["M32_4", "M32_6"], // M16_3 (91)
+  ["M32_7", "M32_8"], // M16_4 (92)
+  ["M32_11", "M32_12"], // M16_5 (93)
+  ["M32_9", "M32_10"], // M16_6 (94)
+  ["M32_14", "M32_16"], // M16_7 (95)
+  ["M32_13", "M32_15"], // M16_8 (96)
 ];
 
 function buildBracket(): Record<string, Match> {
@@ -65,7 +104,11 @@ function buildBracket(): Record<string, Match> {
     const id = `M32_${i + 1}`;
     b[id] = { id, fase: "M32", a: { kind: "source", source: a }, b: { kind: "source", source: c } };
   });
-  const round = (fase: Fase, n: number, prev: string, prefix: string) => {
+  R16_FEEDERS.forEach(([x, y], i) => {
+    const id = `M16_${i + 1}`;
+    b[id] = { id, fase: "M16", a: { kind: "winner", match: x }, b: { kind: "winner", match: y } };
+  });
+  const consec = (fase: Fase, n: number, prev: string, prefix: string) => {
     for (let i = 0; i < n; i++) {
       const id = `${prefix}_${i + 1}`;
       b[id] = {
@@ -76,10 +119,9 @@ function buildBracket(): Record<string, Match> {
       };
     }
   };
-  round("M16", 8, "M32", "M16");
-  round("M8", 4, "M16", "M8");
-  round("M4", 2, "M8", "M4");
-  round("M2", 1, "M4", "M2");
+  consec("M8", 4, "M16", "M8");
+  consec("M4", 2, "M8", "M4");
+  consec("M2", 1, "M4", "M2");
   b["M3P_1"] = {
     id: "M3P_1",
     fase: "M3P",
