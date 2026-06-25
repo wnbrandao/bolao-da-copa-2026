@@ -15,6 +15,9 @@ import {
   type Gabarito,
   type Palpite,
 } from "@/lib/scoring";
+import { MATCHES_BY_FASE, FASES, FASE_NOME, SOURCE_LABEL } from "@/data/bracket";
+import { effectiveSeeding, scoreMata } from "@/lib/mata";
+import type { Chaveamento, MataPalpite } from "@/lib/mata";
 
 export default function VerPage() {
   return (
@@ -36,6 +39,10 @@ function VerPalpite() {
   const [nome, setNome] = useState("");
   const [palpite, setPalpite] = useState<Palpite>({});
   const [gabarito, setGabarito] = useState<Gabarito>({});
+  const [mata, setMata] = useState<MataPalpite>({});
+  const [chaveamento, setChaveamento] = useState<Chaveamento>({ seeding: {}, resultados: {} });
+  const [enviadoEm, setEnviadoEm] = useState("");
+  const [enviadoMataEm, setEnviadoMataEm] = useState("");
 
   useEffect(() => {
     if (!userId) {
@@ -46,7 +53,7 @@ function VerPalpite() {
     getState()
       .then((s) => {
         if (!alive) return;
-        const u = s.palpites.find((p) => p.userId === userId && p.enviadoEm);
+        const u = s.palpites.find((p) => p.userId === userId && (p.enviadoEm || p.enviadoMataEm));
         if (!u) {
           setPhase("notfound");
           return;
@@ -54,6 +61,10 @@ function VerPalpite() {
         setNome(u.nome);
         setPalpite(u.palpite ?? {});
         setGabarito(s.gabarito ?? {});
+        setMata(u.mata ?? {});
+        setChaveamento(s.chaveamento);
+        setEnviadoEm(u.enviadoEm ?? "");
+        setEnviadoMataEm(u.enviadoMataEm ?? "");
         setPhase("ready");
       })
       .catch(() => alive && setPhase("error"));
@@ -91,18 +102,28 @@ function VerPalpite() {
 
   const temGabarito = isGabaritoCompleto(gabarito);
   const oficial = gabaritoToPositions(gabarito);
-  const acertos = Object.keys(palpite).filter((c) => oficial[c] === palpite[c]).length;
-  const pontos = acertos * POINTS_EXACT;
+  const pontos = Object.keys(palpite).filter((c) => oficial[c] === palpite[c]).length * POINTS_EXACT;
+  const seeding = effectiveSeeding(gabarito, chaveamento);
+  const jogouGrupos = !!enviadoEm;
+  const jogouMata = !!enviadoMataEm;
+  const pontosMata = jogouMata ? scoreMata(mata, chaveamento) : 0;
+  const temResultMata = Object.keys(chaveamento.resultados).length > 0;
+  const mostraGrupos = temGabarito && jogouGrupos;
+  const mostraMata = jogouMata && temResultMata;
+  const totalPts = (mostraGrupos ? pontos : 0) + (mostraMata ? pontosMata : 0);
 
   return (
     <main className="flex-1 flex flex-col px-5 py-8">
       <header className="mb-5 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="truncate text-2xl font-bold tracking-tight">{nome}</h1>
-          {temGabarito ? (
+          {mostraGrupos || mostraMata ? (
             <p className="text-sm text-neutral-400">
-              <span className="font-semibold text-emerald-400">{pontos} pts</span>
-              <span className="text-neutral-500"> · {acertos}/48 posições exatas</span>
+              <span className="font-semibold text-emerald-400">{totalPts} pts</span>
+              <span className="text-neutral-500">
+                {mostraGrupos ? ` · grupos ${pontos}` : ""}
+                {mostraMata ? ` · mata ${pontosMata}` : ""}
+              </span>
             </p>
           ) : (
             <p className="text-sm text-neutral-500">Aguardando resultados oficiais</p>
@@ -125,6 +146,7 @@ function VerPalpite() {
         <CopyMessage userId={userId} />
       </div>
 
+      {jogouGrupos && (
       <div className="mt-6 flex flex-col gap-5">
         {GROUPS.map((g) => {
           const codes = Object.keys(palpite)
@@ -165,6 +187,49 @@ function VerPalpite() {
           );
         })}
       </div>
+      )}
+
+      {jogouMata && Object.keys(mata).length > 0 && (
+        <section className="mt-8">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-neutral-400">
+            Mata-mata
+          </h2>
+          <div className="flex flex-col gap-4">
+            {FASES.map((fase) => (
+              <div key={fase}>
+                <h3 className="mb-2 text-xs font-semibold text-neutral-400">{FASE_NOME[fase]}</h3>
+                <ul className="flex flex-col gap-1.5">
+                  {MATCHES_BY_FASE[fase].map((id) => {
+                    const venc = mata[id];
+                    if (!venc) return null;
+                    const sigla = seeding[venc];
+                    const team = sigla ? TEAM_BY_CODE[sigla] : undefined;
+                    const acertou = chaveamento.resultados[id] === venc;
+                    return (
+                      <li
+                        key={id}
+                        className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-sm ${
+                          acertou ? "border-emerald-700 bg-emerald-950/40" : "border-neutral-800 bg-neutral-900"
+                        }`}
+                      >
+                        {team ? (
+                          <Flag code={team.flag} />
+                        ) : (
+                          <span aria-hidden className="h-5 w-7 shrink-0 rounded-[2px] bg-neutral-800 ring-1 ring-black/30" />
+                        )}
+                        <span className="min-w-0 flex-1 truncate font-medium">
+                          {team ? team.nome : (SOURCE_LABEL[venc] ?? venc)}
+                        </span>
+                        {acertou && <span className="text-xs text-emerald-400">✓</span>}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }
