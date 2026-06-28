@@ -1,4 +1,5 @@
 import { API_URL } from "@/lib/config";
+import { GABARITO_OFICIAL } from "@/data/gabarito";
 import type { Gabarito, Palpite } from "@/lib/scoring";
 import type { Chaveamento, MataPalpite } from "@/lib/mata";
 import type { PalpiteRow } from "@/lib/ranking";
@@ -31,9 +32,12 @@ export async function getState(): Promise<State> {
         enviadoMataEm: String(p.enviadoMataEm ?? ""),
       }))
     : [];
+  // Gabarito: base é o oficial embutido; a planilha sobrescreve POR GRUPO quando
+  // preenchida (assim, quando a aba `gabarito` voltar a ser usada, ela vence).
+  const gabarito: Gabarito = { ...GABARITO_OFICIAL, ...(data?.gabarito ?? {}) };
   return {
     palpites: rows,
-    gabarito: data?.gabarito ?? {},
+    gabarito,
     chaveamento: { seeding: ch.seeding ?? {}, resultados: ch.resultados ?? {} },
   };
 }

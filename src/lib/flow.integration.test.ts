@@ -115,11 +115,14 @@ describe("QA fluxo completo (api + ranking + scoring reais)", () => {
     expect(me?.enviadoEm).toBe("");
   });
 
-  it("ranking é null enquanto não há gabarito completo", async () => {
+  it("getState embute o gabarito oficial (ranking não depende da planilha)", async () => {
     const { getState } = await import("@/lib/api");
     const { computeRanking } = await import("@/lib/ranking");
+    const { isGabaritoCompleto } = await import("@/lib/scoring");
     const s = await getState();
-    expect(computeRanking(s.palpites, s.gabarito)).toBeNull();
+    expect(isGabaritoCompleto(s.gabarito)).toBe(true); // oficial embutido (12 grupos)
+    // u1 ainda é rascunho (sem enviadoEm) => não pontua; ranking sai vazio, não null
+    expect(computeRanking(s.palpites, s.gabarito)).toEqual([]);
   });
 
   it("envio completo + gabarito batendo => ranking pontua 144", async () => {

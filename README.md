@@ -54,3 +54,9 @@ O ranking é **parcial**: cada grupo passa a pontuar assim que suas 4 posições
 preenchidas, então o placar já aparece a partir do 1º grupo apurado e cresce
 conforme os jogos acabam (não precisa esperar os 12 fecharem). Detalhes e a
 tabela de siglas em [`google-apps-script/README.md`](./google-apps-script/README.md).
+
+> **Gabarito embutido:** o resultado oficial da fase de grupos está fixado em
+> [`src/data/gabarito.ts`](./src/data/gabarito.ts) (a planilha não está sendo
+> editada). O `getState` usa esse gabarito como base e a planilha **sobrescreve por
+> grupo** quando preenchida — ou seja, quando a aba `gabarito` voltar a ser a fonte
+> da verdade, ela vence sem precisar mexer no código.
