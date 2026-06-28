@@ -6,10 +6,10 @@
 // oficial — NÃO hardcodar grupo aqui.
 //
 // FONTE: chaveamento oficial FIFA 2026 (Anexo C / Wikipedia "2026 FIFA World Cup
-// knockout stage"), jogos 73–96. Os 16-avos (R32) e as oitavas (R16, cruzamento
-// oficial — NÃO são pares consecutivos) estão fiéis ao oficial. Quartas/semis/final
-// usam a árvore consecutiva sobre as oitavas (a meia-chave exata pode ser conferida
-// no bracket oficial; NÃO afeta a pontuação, que é por slot/independente do caminho).
+// knockout stage"). Os 16-avos (R32) e as oitavas (R16, cruzamento oficial — NÃO são
+// pares consecutivos) estão fiéis ao oficial. Quartas = pares consecutivos das oitavas;
+// semis = as duas quartas da MESMA metade do bracket (ver buildBracket). Final/3º saem
+// daí. Confere com o bracket oficial (cada metade só cruza com a outra na final).
 
 export type SourceId = string; // "1A" | "2B" | "T1" ...
 export type Fase = "M32" | "M16" | "M8" | "M4" | "M2" | "M3P";
@@ -120,7 +120,23 @@ function buildBracket(): Record<string, Match> {
     }
   };
   consec("M8", 4, "M16", "M8");
-  consec("M4", 2, "M8", "M4");
+  // Semis pelo bracket OFICIAL: as duas quartas da MESMA metade se enfrentam.
+  // A ordem das oitavas intercala os lados (M16_1,2=esq; 3,4=dir; 5,6=esq; 7,8=dir),
+  // então as quartas ficam M8_1=esq, M8_2=dir, M8_3=esq, M8_4=dir. Logo:
+  //   semi esquerda = M8_1 × M8_3   |   semi direita = M8_2 × M8_4
+  // (consec pareava M8_1×M8_2 = cruzava as metades — errado.)
+  b["M4_1"] = {
+    id: "M4_1",
+    fase: "M4",
+    a: { kind: "winner", match: "M8_1" },
+    b: { kind: "winner", match: "M8_3" },
+  };
+  b["M4_2"] = {
+    id: "M4_2",
+    fase: "M4",
+    a: { kind: "winner", match: "M8_2" },
+    b: { kind: "winner", match: "M8_4" },
+  };
   consec("M2", 1, "M4", "M2");
   b["M3P_1"] = {
     id: "M3P_1",
