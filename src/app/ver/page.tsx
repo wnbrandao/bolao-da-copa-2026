@@ -10,7 +10,8 @@ import { getState } from "@/lib/api";
 import { APOSTAS_ENCERRADAS } from "@/lib/config";
 import {
   gabaritoToPositions,
-  isGabaritoCompleto,
+  gabaritoApurado,
+  contaGruposApurados,
   POINTS_EXACT,
   type Gabarito,
   type Palpite,
@@ -100,8 +101,8 @@ function VerPalpite() {
     );
   }
 
-  const temGabarito = isGabaritoCompleto(gabarito);
-  const oficial = gabaritoToPositions(gabarito);
+  const temGabarito = contaGruposApurados(gabarito) > 0;
+  const oficial = gabaritoToPositions(gabaritoApurado(gabarito));
   const pontos = Object.keys(palpite).filter((c) => oficial[c] === palpite[c]).length * POINTS_EXACT;
   const seeding = effectiveSeeding(gabarito, chaveamento);
   const jogouGrupos = !!enviadoEm;

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getState } from "@/lib/api";
 import { computeCombined, type CombinedEntry, type PalpiteRow } from "@/lib/ranking";
-import { isGabaritoCompleto, type Gabarito } from "@/lib/scoring";
+import { contaGruposApurados, TOTAL_GROUPS, type Gabarito } from "@/lib/scoring";
 import type { Chaveamento } from "@/lib/mata";
 import { BOLOES, BOLAO_BY_USER, type Bolao } from "@/data/grupos";
 
@@ -41,7 +41,8 @@ export default function RankingPage() {
   // Cada aba mostra só os participantes do bolão selecionado.
   const doBolao = palpites.filter((p) => (BOLAO_BY_USER[p.userId] ?? []).includes(bolao));
   const ranking = computeCombined(doBolao, gabarito, chaveamento);
-  const gabaritoPronto = isGabaritoCompleto(gabarito);
+  const gruposApurados = contaGruposApurados(gabarito);
+  const temGrupos = gruposApurados > 0;
   const temMata = Object.keys(chaveamento.resultados).length > 0;
 
   return (
@@ -80,9 +81,16 @@ export default function RankingPage() {
 
       {phase === "ready" && (
         <>
-          {!gabaritoPronto && !temMata && (
+          {!temGrupos && !temMata && (
             <div className="mb-4 rounded-lg border border-amber-800/60 bg-amber-950/30 p-3 text-xs text-amber-300">
-              O ranking pontua quando o gabarito dos grupos fechar e/ou o mata-mata começar.
+              O ranking começa a pontuar assim que o primeiro grupo for apurado e/ou o
+              mata-mata começar.
+            </div>
+          )}
+          {temGrupos && gruposApurados < TOTAL_GROUPS && (
+            <div className="mb-4 rounded-lg border border-emerald-800/60 bg-emerald-950/30 p-3 text-xs text-emerald-300">
+              Ranking parcial — {gruposApurados}/{TOTAL_GROUPS} grupos apurados. A pontuação
+              de grupos cresce conforme os jogos acabam.
             </div>
           )}
           <div className="mb-2 flex items-center justify-end gap-1 text-[10px] uppercase tracking-wider text-neutral-600">
@@ -90,14 +98,14 @@ export default function RankingPage() {
             <span className="w-8 text-right">mata</span>
             <span className="w-10 text-right">total</span>
           </div>
-          <Tabela ranking={ranking} gabaritoPronto={gabaritoPronto} />
+          <Tabela ranking={ranking} mostraGrupos={temGrupos} />
         </>
       )}
     </main>
   );
 }
 
-function Tabela({ ranking, gabaritoPronto }: { ranking: CombinedEntry[]; gabaritoPronto: boolean }) {
+function Tabela({ ranking, mostraGrupos }: { ranking: CombinedEntry[]; mostraGrupos: boolean }) {
   if (ranking.length === 0) {
     return <p className="text-sm text-neutral-500">Ninguém enviou palpite ainda.</p>;
   }
@@ -118,7 +126,7 @@ function Tabela({ ranking, gabaritoPronto }: { ranking: CombinedEntry[]; gabarit
             </span>
             <span className="min-w-0 flex-1 truncate text-sm font-medium">{r.nome}</span>
             <span className="w-10 text-right text-xs tabular-nums text-neutral-400">
-              {gabaritoPronto ? r.grupos : "—"}
+              {mostraGrupos ? r.grupos : "—"}
             </span>
             <span className="w-8 text-right text-xs tabular-nums text-neutral-400">{r.mata}</span>
             <span className="w-10 text-right text-sm font-semibold tabular-nums text-emerald-400">

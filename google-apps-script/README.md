@@ -22,7 +22,9 @@ como **Web App**.
 - Aba **`palpites`**: o app preenche (`userId | nome | enviadoEm | palpite`). O
   `palpite` é um JSON `{ "MEX": 1, "CRO": 2, ... }` (sigla → posição 1..4).
 - Aba **`gabarito`**: **você** edita quando os jogos acabarem. Em cada linha do
-  grupo, ponha as 4 siglas na ordem final (1º → 4º). O ranking calcula sozinho.
+  grupo, ponha as 4 siglas na ordem final (1º → 4º). O ranking calcula sozinho,
+  **parcial**: cada grupo começa a pontuar assim que tiver as 4 siglas — não
+  precisa preencher os 12 de uma vez.
 
 ## Siglas por grupo (pra preencher o gabarito)
 

@@ -2,6 +2,9 @@ import { describe, it, expect } from "vitest";
 import {
   score,
   gabaritoToPositions,
+  gabaritoApurado,
+  contaGruposApurados,
+  isGrupoApurado,
   isGabaritoCompleto,
   POINTS_EXACT,
   type Gabarito,
@@ -66,5 +69,44 @@ describe("isGabaritoCompleto", () => {
     });
     quase.L = ["a", "b", "c"];
     expect(isGabaritoCompleto(quase)).toBe(false);
+  });
+});
+
+describe("apuração parcial (grupo a grupo)", () => {
+  it("isGrupoApurado: só com as 4 siglas", () => {
+    expect(isGrupoApurado(["a", "b", "c", "d"])).toBe(true);
+    expect(isGrupoApurado(["a", "b", "c"])).toBe(false);
+    expect(isGrupoApurado([])).toBe(false);
+    expect(isGrupoApurado(undefined)).toBe(false);
+  });
+
+  it("gabaritoApurado fica só com os grupos completos", () => {
+    const parcial: Gabarito = {
+      A: ["MEX", "RSA", "KOR", "CZE"],
+      B: ["CAN", "BIH"], // ainda não fechou
+      C: ["BRA", "MAR", "HAI", "SCO"],
+    };
+    expect(gabaritoApurado(parcial)).toEqual({
+      A: ["MEX", "RSA", "KOR", "CZE"],
+      C: ["BRA", "MAR", "HAI", "SCO"],
+    });
+  });
+
+  it("contaGruposApurados conta só os fechados", () => {
+    expect(contaGruposApurados({})).toBe(0);
+    expect(
+      contaGruposApurados({ A: ["a", "b", "c", "d"], B: ["a", "b"] }),
+    ).toBe(1);
+  });
+
+  it("score parcial: pontua só os grupos apurados", () => {
+    const gabarito: Gabarito = {
+      A: ["MEX", "RSA", "KOR", "CZE"],
+      B: ["CAN", "BIH"], // não apurado => ignorado
+    };
+    const official = gabaritoToPositions(gabaritoApurado(gabarito));
+    // palpite acerta A inteiro (12) e chutou B, que não pontua ainda.
+    const palpite = { MEX: 1, RSA: 2, KOR: 3, CZE: 4, CAN: 1, BIH: 2 };
+    expect(score(palpite, official)).toBe(12);
   });
 });

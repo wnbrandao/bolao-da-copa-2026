@@ -50,5 +50,7 @@ npm test                   # testes da pontuação
 ## Gabarito (resultado oficial)
 
 Edite a aba **`gabarito`** da planilha com a ordem final de cada grupo (siglas FIFA).
-O ranking aparece sozinho quando os 12 grupos estiverem completos. Detalhes e a
+O ranking é **parcial**: cada grupo passa a pontuar assim que suas 4 posições são
+preenchidas, então o placar já aparece a partir do 1º grupo apurado e cresce
+conforme os jogos acabam (não precisa esperar os 12 fecharem). Detalhes e a
 tabela de siglas em [`google-apps-script/README.md`](./google-apps-script/README.md).
