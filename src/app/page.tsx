@@ -29,7 +29,8 @@ export default function HomePage() {
       return;
     }
     saveIdentity(trimmed);
-    router.push("/palpite");
+    // Grupos encerrados? manda direto pro mata-mata (palpite de grupos travado).
+    router.push(APOSTAS_ENCERRADAS ? "/mata-mata" : "/palpite");
   }
 
   return (
@@ -58,21 +59,50 @@ export default function HomePage() {
 
       {APOSTAS_ENCERRADAS ? (
         <div className="flex flex-col gap-4">
-          {mounted && savedNome && (
-            <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-              <p className="text-sm text-neutral-400">Você está como</p>
-              <p className="text-lg font-semibold">{savedNome}</p>
-            </div>
-          )}
           <div className="rounded-lg border border-amber-800/60 bg-amber-950/30 p-4 text-sm text-amber-300">
-            ⛔ Apostas encerradas — agora é torcer e acompanhar a pontuação.
+            ⛔ Apostas dos grupos encerradas — mas o <b>mata-mata está aberto</b> pra chutar!
           </div>
-          <Link
-            href="/mata-mata"
-            className="rounded-lg bg-emerald-500 px-4 py-3 text-center text-base font-semibold text-black"
-          >
-            🏟️ Mata-mata
-          </Link>
+          {mounted && !savedNome ? (
+            // Sem nome salvo: deixa entrar pra chutar o mata-mata (form não some mais).
+            <form onSubmit={entrar} className="flex flex-col gap-3">
+              <label className="text-sm text-neutral-300" htmlFor="nome">
+                Seu nome (pra entrar no mata-mata)
+              </label>
+              <input
+                id="nome"
+                type="text"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                placeholder="Ex.: Jacinto Pinto Aquino Rego"
+                autoComplete="off"
+                autoCapitalize="words"
+                maxLength={40}
+                className="w-full rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3 text-base outline-none focus:border-emerald-500"
+              />
+              {error && <p className="text-sm text-red-400">{error}</p>}
+              <button
+                type="submit"
+                className="mt-1 rounded-lg bg-emerald-500 px-4 py-3 text-base font-semibold text-black"
+              >
+                🏟️ Entrar no mata-mata
+              </button>
+            </form>
+          ) : (
+            <>
+              {mounted && savedNome && (
+                <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+                  <p className="text-sm text-neutral-400">Você está como</p>
+                  <p className="text-lg font-semibold">{savedNome}</p>
+                </div>
+              )}
+              <Link
+                href="/mata-mata"
+                className="rounded-lg bg-emerald-500 px-4 py-3 text-center text-base font-semibold text-black"
+              >
+                🏟️ Mata-mata
+              </Link>
+            </>
+          )}
           <Link
             href="/ranking"
             className="rounded-lg border border-neutral-800 px-4 py-3 text-center text-base font-medium text-neutral-200"

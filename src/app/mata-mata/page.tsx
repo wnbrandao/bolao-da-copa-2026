@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { getStored } from "@/lib/identity";
 import { getState } from "@/lib/api";
 import { MATA_FASE } from "@/lib/config";
@@ -25,7 +24,6 @@ type Loaded = {
 };
 
 export default function MataPage() {
-  const router = useRouter();
   const [phase, setPhase] = useState<"loading" | "ready">("loading");
   const [data, setData] = useState<Loaded | null>(null);
 
@@ -38,11 +36,8 @@ export default function MataPage() {
         if (!alive) return;
         const seeding = effectiveSeeding(s.gabarito, s.chaveamento);
         const fase = resolveMataFase(MATA_FASE, isSeedingComplete(seeding));
-        // Fora de "em-breve" precisa de identidade pra palpitar / ver o próprio bracket.
-        if (fase !== "em-breve" && (!userId || !nome)) {
-          router.replace("/");
-          return;
-        }
+        // Sem identidade NÃO redireciona (senão cai na home "apostas encerradas").
+        // A página carrega read-only e o board mostra como entrar com o nome.
         const mine = s.palpites.find((p) => p.userId === userId);
         setData({
           fase,
@@ -58,10 +53,6 @@ export default function MataPage() {
         if (!alive) return;
         // Backend indisponível: mostra a prévia (placeholders), read-only.
         const fase = resolveMataFase(MATA_FASE, false);
-        if (fase !== "em-breve" && (!userId || !nome)) {
-          router.replace("/");
-          return;
-        }
         setData({
           fase,
           userId: userId ?? "",
@@ -76,7 +67,7 @@ export default function MataPage() {
     return () => {
       alive = false;
     };
-  }, [router]);
+  }, []);
 
   if (phase === "loading" || !data) {
     return (

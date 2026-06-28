@@ -33,7 +33,9 @@ type Props = {
 const PASSOS = FASES; // ["M32","M16","M8","M4","M2","M3P"]
 
 export default function BracketBoard({ fase, userId, nome, initialMata, submitted, seeding }: Props) {
-  const readOnly = fase !== "aberta";
+  const semIdentidade = !userId || !nome;
+  // Sem nome salvo, vê o bracket mas não chuta (não há como salvar sem identidade).
+  const readOnly = fase !== "aberta" || semIdentidade;
   const [palpite, setPalpite] = useState<MataPalpite>(() => sanitize(initialMata));
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -100,6 +102,15 @@ export default function BracketBoard({ fase, userId, nome, initialMata, submitte
       {fase === "encerrada" && (
         <div className="mb-4 rounded-lg border border-amber-800/60 bg-amber-950/30 p-3 text-xs text-amber-300">
           ⛔ Mata-mata em andamento — palpites encerrados.
+        </div>
+      )}
+      {fase === "aberta" && semIdentidade && (
+        <div className="mb-4 rounded-lg border border-amber-800/60 bg-amber-950/30 p-3 text-xs text-amber-300">
+          👀 Você está só olhando. Pra <b>chutar</b>, volte ao{" "}
+          <Link href="/" className="underline">
+            início
+          </Link>{" "}
+          e entre com seu nome.
         </div>
       )}
 
