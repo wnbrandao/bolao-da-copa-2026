@@ -21,3 +21,20 @@ export const GABARITO_OFICIAL: Gabarito = {
   K: ["COL", "POR", "COD", "UZB"], // Colômbia, Portugal, RD Congo, Uzbequistão
   L: ["ENG", "CRO", "GHA", "PAN"], // Inglaterra, Croácia, Gana, Panamá
 };
+
+// Seeding dos 8 melhores 3os colocados nos slots T1..T8 (slot → sigla), conforme o
+// chaveamento oficial do R32 da Copa 2026. Cada T joga contra um 1º fixo (ver
+// bracket.ts): T1×1E(GER), T2×1I(FRA), T3×1A(MEX), T4×1L(ENG), T5×1D(USA),
+// T6×1G(BEL), T7×1B(SUI), T8×1K(COL). Os 1º/2º saem do gabarito; só os terceiros
+// precisam disto. Fixado aqui porque a aba `chaveamento` da planilha não está sendo
+// editada — ela sobrescreve POR SLOT quando preenchida (ver merge em api.ts).
+export const SEED_TERCEIROS: Record<string, string> = {
+  T1: "PAR", // Paraguai (3º D) × Alemanha
+  T2: "SWE", // Suécia (3º F) × França
+  T3: "ECU", // Equador (3º E) × México
+  T4: "COD", // RD Congo (3º K) × Inglaterra
+  T5: "BIH", // Bósnia (3º B) × EUA
+  T6: "SEN", // Senegal (3º I) × Bélgica
+  T7: "ALG", // Argélia (3º J) × Suíça
+  T8: "GHA", // Gana (3º L) × Colômbia
+};
