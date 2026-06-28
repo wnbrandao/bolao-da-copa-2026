@@ -1,7 +1,11 @@
-// URL do Apps Script Web App (backend no Google Sheets). Injetada no build via
-// NEXT_PUBLIC_API_URL (variável do GitHub Actions / .env local). Pública por
-// natureza (roda no browser).
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+// URL do Apps Script Web App (backend no Google Sheets). Pública por natureza
+// (roda no browser). Fixada aqui como padrão porque a republicação do Apps Script
+// pode gerar uma URL /exec nova — assim o app sempre fala com a versão atual (a que
+// tem a action `saveMata`), sem depender da variável NEXT_PUBLIC_API_URL poder estar
+// desatualizada. Se a env estiver definida (testes / .env local), ela tem prioridade.
+const API_URL_PADRAO =
+  "https://script.google.com/macros/s/AKfycbyDd5VUNoBMxCpM37fqrtrgwGXYWyf9160fFWjgvupMUdxRMjiNIoYIOL5LBMRMBmQ6fg/exec";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || API_URL_PADRAO;
 
 // Caminho base no GitHub Pages (repo de projeto serve em /<repo>/).
 // Precisa bater com `basePath` do next.config.ts.

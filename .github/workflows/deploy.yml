@@ -26,10 +26,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      # NEXT_PUBLIC_API_URL não é mais injetada: a URL /exec é o padrão fixo em
+      # src/lib/config.ts (evita usar uma variável desatualizada após republicar o
+      # Apps Script). Pra trocar o backend, edite API_URL_PADRAO lá.
       - run: npm run build
-        env:
-          # Defina em Settings → Secrets and variables → Actions → Variables.
-          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: out
