@@ -20,8 +20,7 @@ export const APOSTAS_ENCERRADAS = true;
 // (prévia read-only). Use "encerrada" pra travar a UI quando o mata-mata começar;
 // "em-breve"/"aberta" forçam o estado manualmente.
 //
-// FORÇADO "aberta": a fase de grupos acabou, então o chaveamento está liberado pra
-// galera chutar. Os 24 slots de 1º/2º mostram as seleções (vêm do gabarito); os 8
-// terceiros aparecem com o rótulo do grupo ("3º [A/B/C/D/F]") até o seeding dos
-// T1..T8 ser preenchido — o palpite e a pontuação são por SLOT, então já funciona.
-export const MATA_FASE: "auto" | "em-breve" | "aberta" | "encerrada" = "aberta";
+// "encerrada": o mata-mata começou — palpites TRAVADOS. Os brackets já enviados
+// ficam só leitura e a pontuação continua somando conforme os resultados (results)
+// entram. Nada é apagado. (Estava "aberta" durante a janela de palpites.)
+export const MATA_FASE: "auto" | "em-breve" | "aberta" | "encerrada" = "encerrada";
