@@ -19,6 +19,7 @@ import {
 import { MATCHES_BY_FASE, FASES, FASE_NOME, SOURCE_LABEL } from "@/data/bracket";
 import { effectiveSeeding, scoreMata } from "@/lib/mata";
 import type { Chaveamento, MataPalpite } from "@/lib/mata";
+import { consolidatePalpites } from "@/lib/ranking";
 
 export default function VerPage() {
   return (
@@ -54,7 +55,9 @@ function VerPalpite() {
     getState()
       .then((s) => {
         if (!alive) return;
-        const u = s.palpites.find((p) => p.userId === userId && (p.enviadoEm || p.enviadoMataEm));
+        const u = consolidatePalpites(s.palpites).find(
+          (p) => p.userId === userId && (p.enviadoEm || p.enviadoMataEm),
+        );
         if (!u) {
           setPhase("notfound");
           return;

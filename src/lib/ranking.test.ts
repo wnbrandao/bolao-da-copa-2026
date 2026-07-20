@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { computeRanking, computeCombined, type PalpiteRow } from "@/lib/ranking";
+import {
+  computeRanking,
+  computeCombined,
+  consolidatePalpites,
+  type PalpiteRow,
+} from "@/lib/ranking";
 import type { Gabarito } from "@/lib/scoring";
 import type { Chaveamento } from "@/lib/mata";
 
@@ -59,5 +64,60 @@ describe("computeCombined com gabarito parcial", () => {
     const comb = computeCombined(palpites, {}, CHAVE_VAZIO);
     expect(comb.every((c) => c.grupos === 0)).toBe(true);
     expect(comb.length).toBe(2);
+  });
+});
+
+describe("consolidatePalpites", () => {
+  it("une grupos e mata enviados por UUIDs diferentes do mesmo participante", () => {
+    const records: PalpiteRow[] = [
+      {
+        userId: "uuid-grupos",
+        nome: "André Luyde",
+        enviadoEm: "2026-06-08",
+        palpite: { MEX: 1, RSA: 2, KOR: 3, CZE: 4 },
+      },
+      {
+        userId: "uuid-mata-novo",
+        nome: "andre luyde",
+        enviadoEm: "",
+        palpite: {},
+        mata: { M32_1: "1A" },
+        enviadoMataEm: "2026-06-20",
+      },
+    ];
+    const chaveamento: Chaveamento = {
+      seeding: {},
+      resultados: { M32_1: "1A" },
+    };
+
+    expect(consolidatePalpites(records)).toEqual([
+      expect.objectContaining({
+        userId: "uuid-grupos",
+        nome: "André Luyde",
+        enviadoEm: "2026-06-08",
+        enviadoMataEm: "2026-06-20",
+      }),
+    ]);
+
+    expect(computeCombined(records, { A: ["MEX", "RSA", "KOR", "CZE"] }, chaveamento)).toEqual([
+      { userId: "uuid-grupos", nome: "André Luyde", grupos: 12, mata: 1, total: 13 },
+    ]);
+  });
+
+  it("não une homônimos que enviaram palpites de grupos", () => {
+    const records: PalpiteRow[] = [
+      { userId: "ana-1", nome: "Ana", enviadoEm: "2026-06-08", palpite: {} },
+      { userId: "ana-2", nome: "Ana", enviadoEm: "2026-06-09", palpite: {} },
+      {
+        userId: "ana-mata",
+        nome: "ana",
+        enviadoEm: "",
+        palpite: {},
+        mata: { M32_1: "1A" },
+        enviadoMataEm: "2026-06-20",
+      },
+    ];
+
+    expect(consolidatePalpites(records)).toHaveLength(3);
   });
 });

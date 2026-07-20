@@ -5,7 +5,12 @@ import Link from "next/link";
 import { getState } from "@/lib/api";
 import Flag from "@/components/Flag";
 import { TEAM_BY_CODE } from "@/data/teams";
-import { computeCombined, type CombinedEntry, type PalpiteRow } from "@/lib/ranking";
+import {
+  computeCombined,
+  consolidatePalpites,
+  type CombinedEntry,
+  type PalpiteRow,
+} from "@/lib/ranking";
 import { contaGruposApurados, TOTAL_GROUPS, type Gabarito } from "@/lib/scoring";
 import { effectiveSeeding, podio, type Chaveamento, type Podio } from "@/lib/mata";
 import { BOLOES, BOLAO_BY_USER, type Bolao } from "@/data/grupos";
@@ -41,7 +46,10 @@ export default function RankingPage() {
   }, []);
 
   // Cada aba mostra só os participantes do bolão selecionado.
-  const doBolao = palpites.filter((p) => (BOLAO_BY_USER[p.userId] ?? []).includes(bolao));
+  // Consolida antes de separar os bolões: o UUID novo do mata não está no mapa,
+  // mas o UUID original do palpite de grupos está.
+  const participantes = consolidatePalpites(palpites);
+  const doBolao = participantes.filter((p) => (BOLAO_BY_USER[p.userId] ?? []).includes(bolao));
   const ranking = computeCombined(doBolao, gabarito, chaveamento);
   const gruposApurados = contaGruposApurados(gabarito);
   const temGrupos = gruposApurados > 0;
