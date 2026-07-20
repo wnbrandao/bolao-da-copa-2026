@@ -193,14 +193,15 @@ describe("QA fluxo mata-mata (api + scoreMata + computeCombined reais)", () => {
   it("saveMata(submit=true) persiste e pontua contra o chaveamento", async () => {
     const { saveMata, getState } = await import("@/lib/api");
     const { fullBracket, scoreMata } = await import("@/lib/mata");
-    const { MATCHES_BY_FASE } = await import("@/data/bracket");
 
     const mata = fullBracket();
     await saveMata({ userId: "m1", nome: "Mata Tester", mata, submit: true });
 
-    // admin define resultados oficiais = só os 16-avos, iguais ao palpite
-    const resultados: Record<string, string> = {};
-    for (const id of MATCHES_BY_FASE.M32) resultados[id] = mata[id];
+    // admin define os resultados oficiais = o bracket completo (iguais ao palpite).
+    // Precisa ser completo porque getState mescla os resultados OFICIAIS embutidos
+    // como base; a planilha sobrescreve por confronto. Cravar o bracket inteiro
+    // deixa o cenário determinístico (independe dos embutidos).
+    const resultados: Record<string, string> = { ...mata };
     await fetch(process.env.NEXT_PUBLIC_API_URL as string, {
       method: "POST",
       headers: { "content-type": "text/plain" },
@@ -210,7 +211,9 @@ describe("QA fluxo mata-mata (api + scoreMata + computeCombined reais)", () => {
     const s = await getState();
     const me = s.palpites.find((p) => p.userId === "m1");
     expect(me?.enviadoMataEm).toBeTruthy();
-    expect(scoreMata(me!.mata ?? {}, s.chaveamento)).toBe(16); // 16 oitavas × 1
+    // Palpite == oficial em todas as fases => pontuação máxima:
+    // 16×1 + 8×2 + 4×3 + 2×5 + 1×8 + 4 (3º) = 66.
+    expect(scoreMata(me!.mata ?? {}, s.chaveamento)).toBe(66);
   });
 
   it("computeCombined soma grupos + mata e ordena por total", async () => {
@@ -220,7 +223,7 @@ describe("QA fluxo mata-mata (api + scoreMata + computeCombined reais)", () => {
     const comb = computeCombined(s.palpites, s.gabarito, s.chaveamento);
     const m1 = comb.find((c) => c.userId === "m1");
     expect(m1).toBeDefined();
-    expect(m1!.mata).toBe(16);
+    expect(m1!.mata).toBe(66); // bracket cravado no teste anterior => pontuação máxima
     expect(m1!.total).toBe(m1!.grupos + m1!.mata);
   });
 

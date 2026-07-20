@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getState } from "@/lib/api";
+import Flag from "@/components/Flag";
+import { TEAM_BY_CODE } from "@/data/teams";
 import { computeCombined, type CombinedEntry, type PalpiteRow } from "@/lib/ranking";
 import { contaGruposApurados, TOTAL_GROUPS, type Gabarito } from "@/lib/scoring";
-import type { Chaveamento } from "@/lib/mata";
+import { effectiveSeeding, podio, type Chaveamento, type Podio } from "@/lib/mata";
 import { BOLOES, BOLAO_BY_USER, type Bolao } from "@/data/grupos";
 
 const CHAVE_VAZIO: Chaveamento = { seeding: {}, resultados: {} };
@@ -44,6 +46,8 @@ export default function RankingPage() {
   const gruposApurados = contaGruposApurados(gabarito);
   const temGrupos = gruposApurados > 0;
   const temMata = Object.keys(chaveamento.resultados).length > 0;
+  const podioSlots = podio(chaveamento);
+  const seeding = effectiveSeeding(gabarito, chaveamento);
 
   return (
     <main className="flex-1 flex flex-col px-5 py-8">
@@ -81,6 +85,7 @@ export default function RankingPage() {
 
       {phase === "ready" && (
         <>
+          {podioSlots && <PodioBanner podio={podioSlots} seeding={seeding} />}
           {!temGrupos && !temMata && (
             <div className="mb-4 rounded-lg border border-amber-800/60 bg-amber-950/30 p-3 text-xs text-amber-300">
               O ranking começa a pontuar assim que o primeiro grupo for apurado e/ou o
@@ -102,6 +107,39 @@ export default function RankingPage() {
         </>
       )}
     </main>
+  );
+}
+
+function PodioBanner({ podio, seeding }: { podio: Podio; seeding: Record<string, string> }) {
+  const time = (slot: string) => TEAM_BY_CODE[seeding[slot]];
+  const campea = time(podio.campeao);
+  const vice = time(podio.vice);
+  const terceiro = time(podio.terceiro);
+  if (!campea) return null;
+  return (
+    <div className="mb-5 rounded-xl border border-amber-700/50 bg-gradient-to-b from-amber-950/40 to-neutral-900 p-4">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-400/90">
+        🏆 Campeã da Copa 2026
+      </p>
+      <div className="mt-2 flex items-center gap-3">
+        <Flag code={campea.flag} />
+        <span className="text-xl font-bold">{campea.nome}</span>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-neutral-400">
+        {vice && (
+          <span className="flex items-center gap-1.5">
+            <span className="text-neutral-500">Vice</span>
+            <Flag code={vice.flag} /> {vice.nome}
+          </span>
+        )}
+        {terceiro && (
+          <span className="flex items-center gap-1.5">
+            <span className="text-neutral-500">3º</span>
+            <Flag code={terceiro.flag} /> {terceiro.nome}
+          </span>
+        )}
+      </div>
+    </div>
   );
 }
 

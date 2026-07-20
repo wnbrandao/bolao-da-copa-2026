@@ -38,3 +38,51 @@ export const SEED_TERCEIROS: Record<string, string> = {
   T7: "ALG", // Argélia (3º J) × Suíça
   T8: "GHA", // Gana (3º L) × Colômbia
 };
+
+// Resultado OFICIAL do mata-mata da Copa 2026 — o SLOT vencedor de cada confronto
+// (matchId → slot), nunca a sigla. Fonte: resultados reais (Wikipedia "2026 FIFA
+// World Cup knockout stage" + noticiário). Campeã: Espanha (bateu a Argentina 1–0
+// na final); Inglaterra em 3º (bateu a França). Todo slot aqui é competidor válido
+// do seu confronto (ver bracket.ts) — checado no teste gabarito.test.ts.
+//
+// Precedência: base é este embutido; a aba `chaveamento` da planilha sobrescreve
+// POR CONFRONTO quando preenchida (merge em getState, src/lib/api.ts).
+export const RESULTADOS_OFICIAIS: Record<string, string> = {
+  // 16-avos (M32): quem passou. Ex.: RSA×CAN → CAN(2B).
+  M32_1: "2B", //  RSA × CAN  → Canadá
+  M32_2: "T1", //  GER × PAR  → Paraguai (pênaltis)
+  M32_3: "2C", //  NED × MAR  → Marrocos
+  M32_4: "1C", //  BRA × JPN  → Brasil
+  M32_5: "1I", //  FRA × SWE  → França
+  M32_6: "2I", //  CIV × NOR  → Noruega
+  M32_7: "1A", //  MEX × ECU  → México
+  M32_8: "1L", //  ENG × COD  → Inglaterra
+  M32_9: "1D", //  USA × BIH  → EUA
+  M32_10: "1G", // BEL × SEN  → Bélgica
+  M32_11: "2K", // POR × CRO  → Portugal
+  M32_12: "1H", // ESP × AUT  → Espanha
+  M32_13: "1B", // SUI × ALG  → Suíça
+  M32_14: "1J", // ARG × CPV  → Argentina
+  M32_15: "1K", // COL × GHA  → Colômbia
+  M32_16: "2G", // AUS × EGY  → Egito (pênaltis)
+  // Oitavas (M16)
+  M16_1: "1I", // PAR × FRA  → França
+  M16_2: "2C", // CAN × MAR  → Marrocos
+  M16_3: "2I", // BRA × NOR  → Noruega (Brasil eliminado)
+  M16_4: "1L", // MEX × ENG  → Inglaterra
+  M16_5: "1H", // POR × ESP  → Espanha
+  M16_6: "1G", // USA × BEL  → Bélgica
+  M16_7: "1J", // ARG × EGY  → Argentina
+  M16_8: "1B", // SUI × COL  → Suíça
+  // Quartas (M8)
+  M8_1: "1I", // FRA × MAR  → França
+  M8_2: "1L", // NOR × ENG  → Inglaterra
+  M8_3: "1H", // ESP × BEL  → Espanha
+  M8_4: "1J", // ARG × SUI  → Argentina
+  // Semis (M4)
+  M4_1: "1H", // FRA × ESP  → Espanha
+  M4_2: "1J", // ENG × ARG  → Argentina
+  // Final (M2) e disputa de 3º (M3P)
+  M2_1: "1H", //  ESP × ARG  → 🏆 Espanha campeã
+  M3P_1: "1L", // FRA × ENG  → Inglaterra (3º lugar)
+};

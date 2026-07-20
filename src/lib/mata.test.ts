@@ -10,6 +10,7 @@ import {
   effectiveSeeding,
   isSeedingComplete,
   resolveMataFase,
+  podio,
   PONTOS_MATA,
   type Chaveamento,
   type MataPalpite,
@@ -178,5 +179,25 @@ describe("resolveMataFase", () => {
     expect(resolveMataFase("encerrada", true)).toBe("encerrada");
     expect(resolveMataFase("em-breve", true)).toBe("em-breve");
     expect(resolveMataFase("aberta", false)).toBe("aberta");
+  });
+});
+
+describe("podio", () => {
+  it("null enquanto a final ou a disputa de 3º não têm resultado", () => {
+    expect(podio(vazio)).toBeNull();
+    expect(podio({ seeding: {}, resultados: { M2_1: "1H" } })).toBeNull(); // falta 3º
+    expect(podio({ seeding: {}, resultados: { M3P_1: "1L" } })).toBeNull(); // falta final
+  });
+
+  it("deriva campeão/vice/3º/4º a partir de um bracket completo", () => {
+    const full = fullFrom({}); // 1º competidor resolvido vence sempre
+    const p = podio({ seeding: {}, resultados: full });
+    expect(p).not.toBeNull();
+    if (!p) return;
+    // campeão = vencedor da final; vice = o outro finalista.
+    expect(p.campeao).toBe(full.M2_1);
+    const [f1, f2] = competitors("M2_1", full);
+    expect(p.vice).toBe(p.campeao === f1 ? f2 : f1);
+    expect(p.terceiro).toBe(full.M3P_1);
   });
 });

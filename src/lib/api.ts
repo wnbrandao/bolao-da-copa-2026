@@ -1,5 +1,5 @@
 import { API_URL } from "@/lib/config";
-import { GABARITO_OFICIAL, SEED_TERCEIROS } from "@/data/gabarito";
+import { GABARITO_OFICIAL, SEED_TERCEIROS, RESULTADOS_OFICIAIS } from "@/data/gabarito";
 import type { Gabarito, Palpite } from "@/lib/scoring";
 import type { Chaveamento, MataPalpite } from "@/lib/mata";
 import type { PalpiteRow } from "@/lib/ranking";
@@ -35,13 +35,14 @@ export async function getState(): Promise<State> {
   // Gabarito: base é o oficial embutido; a planilha sobrescreve POR GRUPO quando
   // preenchida (assim, quando a aba `gabarito` voltar a ser usada, ela vence).
   const gabarito: Gabarito = { ...GABARITO_OFICIAL, ...(data?.gabarito ?? {}) };
-  // Seeding dos terceiros (T1..T8) embutido; a planilha sobrescreve por slot.
+  // Seeding dos terceiros (T1..T8) e resultados oficiais do mata embutidos; a
+  // planilha sobrescreve por slot / por confronto quando preenchida.
   return {
     palpites: rows,
     gabarito,
     chaveamento: {
       seeding: { ...SEED_TERCEIROS, ...(ch.seeding ?? {}) },
-      resultados: ch.resultados ?? {},
+      resultados: { ...RESULTADOS_OFICIAIS, ...(ch.resultados ?? {}) },
     },
   };
 }

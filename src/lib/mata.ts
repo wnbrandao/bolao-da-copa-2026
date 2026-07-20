@@ -116,6 +116,30 @@ export function scoreMata(palpite: MataPalpite, oficial: Chaveamento): number {
   return pts;
 }
 
+// Pódio oficial (campeão/vice/3º/4º) como SLOTS, derivado dos resultados. Retorna
+// null enquanto a final (M2_1) ou a disputa de 3º (M3P_1) não tiverem resultado.
+export type Podio = {
+  campeao: SourceId;
+  vice: SourceId;
+  terceiro: SourceId;
+  quarto: SourceId;
+};
+
+export function podio(ch: Chaveamento): Podio | null {
+  const campeao = ch.resultados.M2_1;
+  const terceiro = ch.resultados.M3P_1;
+  if (!campeao || !terceiro) return null;
+  const [f1, f2] = competitors("M2_1", ch.resultados); // finalistas
+  const [t1, t2] = competitors("M3P_1", ch.resultados); // disputa de 3º
+  if (!f1 || !f2 || !t1 || !t2) return null;
+  return {
+    campeao,
+    vice: campeao === f1 ? f2 : f1,
+    terceiro,
+    quarto: terceiro === t1 ? t2 : t1,
+  };
+}
+
 // ===== Seeding (slot → seleção) e estado da fase =====
 // Objetivo: você só adiciona o resultado dos grupos (gabarito) + os 8 melhores
 // terceiros, e o bracket fica pronto pra preencher.
